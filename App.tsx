@@ -4,7 +4,7 @@ import { supabase, isSupabaseConfigured } from './services/supabase';
 import { AppProvider, initialState, appReducer, useAppContext } from './context/AppContext';
 import { ToastProvider, Skeleton } from './components/UI';
 import { MainLayout } from './components/Layout';
-import { RefreshCcw, WifiOff, AlertTriangle, ShieldAlert, Calendar, Filter, ArrowRight, DollarSign, Landmark, TrendingUp, CheckCircle2, Clock } from 'lucide-react';
+import { RefreshCcw, WifiOff, AlertTriangle, ShieldAlert, Calendar, Filter, ArrowRight, DollarSign, Landmark, TrendingUp, CheckCircle2, Clock, ReceiptText, Users, Building, Briefcase, Target } from 'lucide-react';
 import { FirstAccessModal } from './components/Modals';
 
 // Views
@@ -56,10 +56,10 @@ const formatCurrency = (val: number) => {
 };
 
 function InicioView() {
-  const { supabase } = useAppContext();
+  const { supabase, dispatch } = useAppContext();
   const [loading, setLoading] = useState(true);
-  const [dateDe, setDateDe] = useState('2026-01');
-  const [dateAte, setDateAte] = useState('2026-12');
+  const [dateDe, setDateDe] = useState(new Date().toISOString().substring(0, 7));
+  const [dateAte, setDateAte] = useState('2027-12');
   const [data, setData] = useState({ faturamentos: [] as any[], clientes: [] as any[], projetos: [] as any[] });
 
   const fetchData = async () => {
@@ -78,54 +78,66 @@ function InicioView() {
 
   const stats = useMemo(() => {
     const filteredData = data.faturamentos.filter(f => f.mes_referencia >= dateDe && f.mes_referencia <= dateAte);
-    const totalFaturado = filteredData.reduce((acc, curr) => acc + (Number(curr.valor_realizado) || Number(curr.valor) || 0), 0);
-    const totalRecebido = filteredData.filter(f => f.status === 'Pago').reduce((acc, curr) => acc + (Number(curr.valor_realizado) || 0), 0);
-    const pendentes = filteredData.filter(f => f.status !== 'Pago').reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
+    const totalPlanejado = filteredData.reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
+    const totalFaturado = filteredData.filter(f => f.status === 'Faturado').reduce((acc, curr) => acc + (Number(curr.valor_realizado) || Number(curr.valor) || 0), 0);
+    const recebimentoEsperado = filteredData.filter(f => f.status !== 'Faturado').reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
+    
     const pipelineCount = {
       previsto: filteredData.filter(f => f.status === 'Previsto').length,
       pendente: filteredData.filter(f => f.status === 'Pendente').length,
       validado: filteredData.filter(f => f.status === 'Validado com Cliente').length,
       solicitado: filteredData.filter(f => f.status === 'Solicitação Enviada').length,
       nota: filteredData.filter(f => f.status === 'Nota Enviada').length,
-      pago: filteredData.filter(f => f.status === 'Pago').length,
+      faturado: filteredData.filter(f => f.status === 'Faturado').length,
     };
-    const projectSummary = data.projetos.map(p => {
-      const total = filteredData.filter(f => f.projeto_id === p.id).reduce((acc, curr) => acc + (Number(curr.valor_realizado) || Number(curr.valor) || 0), 0);
-      return { nome: p.nome, total };
-    }).filter(p => p.total > 0).sort((a, b) => b.total - a.total).slice(0, 6);
-    return { totalFaturado, totalRecebido, pendentes, pipelineCount, projectSummary };
+    return { totalPlanejado, totalFaturado, recebimentoEsperado, pipelineCount };
   }, [data, dateDe, dateAte]);
 
   if (loading) return <div className="p-8 space-y-8 animate-pulse"><div className="grid grid-cols-1 md:grid-cols-3 gap-6">{[1,2,3].map(i => <Skeleton key={i} className="h-32 rounded-3xl" />)}</div><Skeleton className="h-80 rounded-[2.5rem]" /></div>;
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
+      {/* 1. Cabeçalho */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
         <div>
-          <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">Visão Consolidada</h2>
+          <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">Início</h2>
           <p className="text-gray-500 font-medium mt-2">Dados estratégicos baseados no período de referência.</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-[1.8rem] shadow-xl border border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-900 px-4 py-2 rounded-2xl">
-             <Filter className="h-4 w-4 text-blue-600" />
-             <div className="flex items-center gap-2">
-               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">De</label>
-               <input type="month" value={dateDe} onChange={e => setDateDe(e.target.value)} className="bg-transparent border-none p-0 text-sm font-black focus:ring-0 text-gray-900 dark:text-white cursor-pointer" />
-             </div>
-             <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-2"></div>
-             <div className="flex items-center gap-2">
-               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Até</label>
-               <input type="month" value={dateAte} onChange={e => setDateAte(e.target.value)} className="bg-transparent border-none p-0 text-sm font-black focus:ring-0 text-gray-900 dark:text-white cursor-pointer" />
-             </div>
-          </div>
-          <button onClick={fetchData} className="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"><RefreshCcw className="h-5 w-5" /></button>
+      </div>
+
+      {/* 2. Atalhos Rápidos */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <ShortcutButton icon={Users} label="Cooperados" onClick={() => dispatch({ type: 'NAVIGATE', payload: { view: 'cooperados' } })} color="blue" />
+        <ShortcutButton icon={Briefcase} label="Projetos" onClick={() => dispatch({ type: 'NAVIGATE', payload: { view: 'projetos' } })} color="emerald" />
+        <ShortcutButton icon={ReceiptText} label="Faturamento" onClick={() => dispatch({ type: 'NAVIGATE', payload: { view: 'faturamentos' } })} color="indigo" />
+        <ShortcutButton icon={Target} label="Oportunidades" onClick={() => dispatch({ type: 'NAVIGATE', payload: { view: 'oportunidades' } })} color="violet" />
+      </div>
+
+      {/* 3. Filtros */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-[1.8rem] shadow-xl border border-gray-100 dark:border-gray-700 flex flex-wrap items-center gap-4">
+        <div className="flex items-center gap-3 bg-gray-50 dark:bg-gray-900 px-4 py-2 rounded-2xl">
+           <Filter className="h-4 w-4 text-blue-600" />
+           <div className="flex items-center gap-2">
+             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">De</label>
+             <input type="month" value={dateDe} onChange={e => setDateDe(e.target.value)} className="bg-transparent border-none p-0 text-sm font-black focus:ring-0 text-gray-900 dark:text-white cursor-pointer" />
+           </div>
+           <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-2"></div>
+           <div className="flex items-center gap-2">
+             <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Até</label>
+             <input type="month" value={dateAte} onChange={e => setDateAte(e.target.value)} className="bg-transparent border-none p-0 text-sm font-black focus:ring-0 text-gray-900 dark:text-white cursor-pointer" />
+           </div>
         </div>
+        <button onClick={fetchData} className="p-3 bg-blue-50 dark:bg-blue-900/30 text-blue-600 rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"><RefreshCcw className="h-5 w-5" /></button>
       </div>
+
+      {/* 4. Indicadores Financeiros */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        <SummaryCard label="Faturamento no Período" value={formatCurrency(stats.totalFaturado)} icon={DollarSign} color="blue" />
-        <SummaryCard label="Total Recebido (Pago)" value={formatCurrency(stats.totalRecebido)} icon={Landmark} color="emerald" />
-        <SummaryCard label="Pendente de Recebimento" value={formatCurrency(stats.pendentes)} icon={Clock} color="rose" />
+        <SummaryCard label="Total Planejado no Período" value={formatCurrency(stats.totalPlanejado)} icon={Calendar} color="blue" />
+        <SummaryCard label="Total Faturado" value={formatCurrency(stats.totalFaturado)} icon={ReceiptText} color="emerald" />
+        <SummaryCard label="Recebimento Esperado" value={formatCurrency(stats.recebimentoEsperado)} icon={Clock} color="rose" />
       </div>
+
+      {/* 5. Pipeline de Fluxo */}
       <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-gray-700">
         <h3 className="text-xl font-black text-gray-900 dark:text-white mb-10 tracking-tight flex items-center gap-2"><TrendingUp className="h-5 w-5 text-blue-600" /> Pipeline de Fluxo</h3>
         <div className="relative flex justify-between overflow-x-auto no-scrollbar pb-2">
@@ -134,10 +146,25 @@ function InicioView() {
           <PipelineStep label="Validado" count={stats.pipelineCount.validado} active={stats.pipelineCount.validado > 0} />
           <PipelineStep label="Solicitado" count={stats.pipelineCount.solicitado} active={stats.pipelineCount.solicitado > 0} />
           <PipelineStep label="Nota Enviada" count={stats.pipelineCount.nota} active={stats.pipelineCount.nota > 0} />
-          <PipelineStep label="Pago" count={stats.pipelineCount.pago} active={stats.pipelineCount.pago > 0} last />
+          <PipelineStep label="Faturado" count={stats.pipelineCount.faturado} active={stats.pipelineCount.faturado > 0} last />
         </div>
       </div>
     </div>
+  );
+}
+
+function ShortcutButton({ icon: Icon, label, onClick, color }: any) {
+  const colors: any = {
+    blue: "text-blue-600 bg-blue-50 dark:bg-blue-900/20",
+    emerald: "text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20",
+    indigo: "text-indigo-600 bg-indigo-50 dark:bg-indigo-900/20",
+    violet: "text-violet-600 bg-violet-50 dark:bg-violet-900/20",
+  };
+  return (
+    <button onClick={onClick} className="flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-800 rounded-[1.8rem] shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:shadow-lg hover:-translate-y-1 active:scale-95 group">
+      <div className={`p-4 rounded-2xl mb-3 transition-transform group-hover:scale-110 ${colors[color]}`}><Icon className="h-6 w-6" /></div>
+      <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest">{label}</span>
+    </button>
   );
 }
 

@@ -1,5 +1,5 @@
 {
   "name": "Portal Accelera",
-  "description": "A comprehensive management portal for cooperators, projects, clients, and vacation tracking powered by Firebase.",
+  "description": "A comprehensive management portal with a BFF (Backend For Frontend) integrated with Azure SQL Database.",
   "requestFramePermissions": []
 }

@@ -150,18 +150,19 @@ export default function FaturamentosView() {
 
   const summaryStats = useMemo(() => {
     let planejado = 0;
-    let realizado = 0;
-    let saldoTotal = 0;
+    let faturado = 0;
+    let saldoEsperado = 0;
     processed.forEach(f => {
       const vPrevisto = Number(f.valor) || 0;
       const vRealizado = Number(f.valor_realizado) || 0;
       planejado += vPrevisto;
-      realizado += vRealizado;
-      if (f.status !== 'Faturado') {
-        saldoTotal += vPrevisto;
+      if (f.status === 'Faturado') {
+        faturado += (vRealizado || vPrevisto);
+      } else {
+        saldoEsperado += vPrevisto;
       }
     });
-    return { planejado, realizado, saldo: saldoTotal };
+    return { planejado, faturado, saldoEsperado };
   }, [processed]);
 
   const totalPages = Math.ceil(processed.length / itemsPerPage);
@@ -266,7 +267,7 @@ export default function FaturamentosView() {
     <div className="space-y-8 animate-fade-in pb-10 w-full max-w-[1600px] mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">Faturamentos</h2>
+          <h2 className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter leading-none">Faturamento</h2>
           <p className="text-sm text-gray-500 mt-2 font-medium">Gestão financeira de receitas e cronograma comercial.</p>
         </div>
         <div className="flex gap-2">
@@ -284,8 +285,8 @@ export default function FaturamentosView() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <SummaryCardSimple label="Valor Planejado (Total)" value={summaryStats.planejado} icon={TrendingUp} color="blue" />
-        <SummaryCardSimple label="Valor Realizado (Enviado)" value={summaryStats.realizado} icon={CheckCircle2} color="emerald" />
-        <SummaryCardSimple label="Saldo a Faturar" value={summaryStats.saldo} icon={ReceiptText} color="indigo" highlight />
+        <SummaryCardSimple label="Valor Faturado" value={summaryStats.faturado} icon={ReceiptText} color="emerald" />
+        <SummaryCardSimple label="Faturamento Esperado" value={summaryStats.saldoEsperado} icon={Clock} color="indigo" highlight />
       </div>
 
       <div className="bg-white dark:bg-gray-800 p-4 rounded-[1.5rem] shadow-sm border dark:border-gray-700 flex flex-wrap gap-4 items-center">
@@ -549,7 +550,7 @@ export function FaturamentoDetalheView({ faturamentoId }: { faturamentoId: strin
         { key: 'cliente_id', label: 'Cliente', format: (id: any) => clientes.find(c => c.id === id)?.nome || id },
         { key: 'projeto_id', label: 'Projeto', format: (id: any) => projetos.find(p => p.id === id)?.nome || id },
         { key: 'valor', label: 'Valor Previsto', format: formatCurrency },
-        { key: 'valor_realizado', label: 'Valor Realizado (Envio)', format: formatCurrency },
+        { key: 'valor_realizado', label: 'Valor Faturado', format: formatCurrency },
         { key: 'status', label: 'Status' },
         { key: 'mes_referencia', label: 'Mês de Referência', format: formatMonth },
         { key: 'data_envio', label: 'Data de Envio' },
@@ -664,7 +665,7 @@ function TabDadosFaturamento({ faturamento }: any) {
            </div>
            <div className="flex-1 p-8 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-b-[2.5rem] border-x-2 border-b-2 border-indigo-100 dark:border-indigo-800/40 shadow-inner space-y-6">
               <div>
-                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Vlr. Realizado (Enviado)</span>
+                <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-2">Vlr. Faturado (Enviado)</span>
                 <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-tighter">
                   {faturamento.valor_realizado ? formatCurrency(faturamento.valor_realizado) : '-'}
                 </p>
@@ -743,7 +744,7 @@ function TabAlocacaoFaturamento({ faturamento, refreshDetail }: any) {
   const [loading, setLoading] = useState(true);
   const [isAlocModalOpen, setIsAlocModalOpen] = useState(false);
   const [editingAloc, setEditingAloc] = useState<any>(null);
-  const [isConfirmAlocDeleteOpen, setIsConfirmAlocDeleteOpen] = useState(false);
+  const [isConfirmDeleteOpen, setIsConfirmDeleteOpen] = useState(false);
   const [alocIdToDelete, setAlocIdToDelete] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
@@ -784,7 +785,7 @@ function TabAlocacaoFaturamento({ faturamento, refreshDetail }: any) {
       if (error) throw error;
       await fetchData();
       addToast("Alocação removida!");
-    } catch (err: any) { addToast(err.message, "error"); } finally { setIsConfirmAlocDeleteOpen(false); setAlocIdToDelete(null); }
+    } catch (err: any) { addToast(err.message, "error"); } finally { setIsConfirmDeleteOpen(false); setAlocIdToDelete(null); }
   };
 
   const totalCusto = useMemo(() => alocacoes.reduce((acc, curr) => acc + (Number(curr.totalCusto) || 0), 0), [alocacoes]);
@@ -818,7 +819,7 @@ function TabAlocacaoFaturamento({ faturamento, refreshDetail }: any) {
                 <td className="px-6 py-6 text-center"><span className="font-black text-blue-600">{Number(a.horas_mensais || 0).toFixed(1)}h</span></td>
                 <td className="px-6 py-6 text-right font-bold text-gray-500">{formatCurrency(a.valor_hora || 0)}</td>
                 <td className="px-8 py-6 text-right font-black text-gray-900 dark:text-white">{formatCurrency(a.totalCusto || 0)}</td>
-                <td className="px-6 py-6 text-right opacity-0 group-hover:opacity-100 transition-opacity"><div className="flex gap-2 justify-end"><button onClick={() => { setEditingAloc(a); setIsAlocModalOpen(true); }} className="p-2 text-blue-400 hover:text-blue-600"><Edit className="h-4 w-4"/></button><button onClick={() => { setAlocIdToDelete(a.id); setIsConfirmAlocDeleteOpen(true); }} className="p-2 text-rose-300 hover:text-rose-600"><Trash2 className="h-4 w-4"/></button></div></td>
+                <td className="px-6 py-6 text-right opacity-0 group-hover:opacity-100 transition-opacity"><div className="flex gap-2 justify-end"><button onClick={() => { setEditingAloc(a); setIsAlocModalOpen(true); }} className="p-2 text-blue-400 hover:text-blue-600"><Edit className="h-4 w-4"/></button><button onClick={() => { setAlocIdToDelete(a.id); setIsConfirmDeleteOpen(true); }} className="p-2 text-rose-300 hover:text-rose-600"><Trash2 className="h-4 w-4"/></button></div></td>
               </tr>
             ))}
           </tbody>
@@ -828,7 +829,7 @@ function TabAlocacaoFaturamento({ faturamento, refreshDetail }: any) {
         </table>
       </div>
       {isAlocModalOpen && <AlocacaoFormModal isOpen={isAlocModalOpen} onClose={() => setIsAlocModalOpen(false)} onSave={handleSaveAloc} cooperados={cooperados} hideDates={true} item={editingAloc ? { cooperado_id: editingAloc.cooperado_id, percentual: editingAloc.percentual, valor_hora: editingAloc.valor_hora, horas_mensais: editingAloc.horas_mensais } : undefined} />}
-      {isConfirmAlocDeleteOpen && <ConfirmDeleteModal isOpen={isConfirmAlocDeleteOpen} onClose={() => setIsConfirmAlocDeleteOpen(false)} onConfirm={handleDeleteAloc} title="Remover Custo" message="Tem certeza que deseja remover esta alocação de custo deste faturamento?" />}
+      {isConfirmDeleteOpen && <ConfirmDeleteModal isOpen={isConfirmDeleteOpen} onClose={() => setIsConfirmDeleteOpen(false)} onConfirm={handleDeleteAloc} title="Remover Custo" message="Tem certeza que deseja remover esta alocação de custo deste faturamento?" />}
     </div>
   );
 }

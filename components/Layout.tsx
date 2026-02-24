@@ -170,13 +170,14 @@ export function Header() {
 
 export function Sidebar() {
   const { state, dispatch } = useAppContext();
+  
   const navItems = [
     { name: 'Início', view: 'inicio', icon: Home },
-    { name: 'Oportunidades', view: 'oportunidades', icon: Target },
-    { name: 'Cooperados', view: 'cooperados', icon: Users },
     { name: 'Clientes', view: 'clientes', icon: Building },
+    { name: 'Cooperados', view: 'cooperados', icon: Users },
     { name: 'Projetos', view: 'projetos', icon: Briefcase },
-    { name: 'Faturamentos', view: 'faturamentos', icon: ReceiptText },
+    { name: 'Faturamento', view: 'faturamentos', icon: ReceiptText },
+    { name: 'Oportunidades', view: 'oportunidades', icon: Target },
     { name: 'Relatórios', view: 'relatorios', icon: BarChart3 },
     { name: 'Configurações', view: 'settings', icon: Settings },
   ];

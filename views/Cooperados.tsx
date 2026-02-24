@@ -81,6 +81,33 @@ export function CooperadosView() {
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
   const paginatedData = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
+  const handleSaveNew = async (d: any) => {
+    try {
+      const payload = sanitizePayload({
+        nome_completo: d.nomeCompleto,
+        funcao: d.funcao,
+        email: d.email,
+        telefone: d.telefone,
+        cpf: d.cpf,
+        status: d.status,
+        data_inicio: d.dataInicio,
+        endereco: d.endereco,
+        bairro: d.bairro,
+        cidade: d.cidade,
+        uf: d.uf,
+        cep: d.cep,
+        contato_emergencia: d.contatoEmergencia
+      });
+      const { error } = await supabase.from('cooperados').insert([payload]);
+      if (error) throw error;
+      addToast("Novo profissional cadastrado!");
+      setIsModalOpen(false);
+      fetchData();
+    } catch (e: any) {
+      addToast(e.message, "error");
+    }
+  }
+
   return (
     <div className="space-y-6 animate-fade-in pb-12">
       <div className="flex flex-col md:flex-row justify-between items-end gap-4">
@@ -89,11 +116,11 @@ export function CooperadosView() {
           <p className="text-gray-500 font-medium mt-1">Gestão de talentos e disponibilidade.</p>
         </div>
         <div className="flex items-center gap-2">
-           <div className="bg-white dark:bg-gray-800 p-1 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex">
+           <div className="bg-white dark:bg-gray-800 p-1.5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 flex">
             <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}><List className="h-5 w-5"/></button>
             <button onClick={() => setViewMode('card')} className={`p-2 rounded-lg transition-all ${viewMode === 'card' ? 'bg-blue-600 text-white shadow-md' : 'text-gray-400 hover:text-gray-600'}`}><LayoutGrid className="h-5 w-5"/></button>
           </div>
-          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[11px] shadow-lg active:scale-95 transition-all"><Plus className="h-5 w-5 mr-2 inline stroke-[3px]"/> Novo</button>
+          <button onClick={() => setIsModalOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-[11px] shadow-lg active:scale-95 transition-all"><Plus className="h-5 w-5 mr-2 inline stroke-[3px]"/> Novo</button>
         </div>
       </div>
       
@@ -172,7 +199,7 @@ export function CooperadosView() {
       )}
 
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} totalItems={filtered.length} itemsPerPage={itemsPerPage} />
-      {isModalOpen && <CooperadoFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={() => { fetchData(); setIsModalOpen(false); }} />}
+      {isModalOpen && <CooperadoFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={handleSaveNew} />}
     </div>
   );
 }
@@ -251,6 +278,7 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
                 telefone: d.telefone,
                 cpf: d.cpf,
                 status: d.status,
+                data_inicio: d.dataInicio,
                 endereco: d.endereco,
                 bairro: d.bairro,
                 cidade: d.cidade,
@@ -258,10 +286,14 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
                 cep: d.cep,
                 contato_emergencia: d.contatoEmergencia
             });
-            await supabase.from('cooperados').update(payload).eq('id', cooperadoId);
-            setIsEdit(false);
-            fetchCooperado();
-            addToast("Atualizado!");
+            const { error } = await supabase.from('cooperados').update(payload).eq('id', cooperadoId);
+            if (!error) {
+              setIsEdit(false);
+              fetchCooperado();
+              addToast("Dados do cooperado atualizados!");
+            } else {
+              addToast(error.message, "error");
+            }
         }} cooperado={{
           nomeCompleto: cooperado.nome_completo,
           funcao: cooperado.funcao,
@@ -269,6 +301,7 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
           telefone: cooperado.telefone,
           cpf: cooperado.cpf,
           status: cooperado.status,
+          dataInicio: cooperado.data_inicio,
           endereco: cooperado.endereco,
           bairro: cooperado.bairro,
           cidade: cooperado.cidade,

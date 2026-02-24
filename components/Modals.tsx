@@ -53,6 +53,7 @@ export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) 
     telefone: cooperado?.telefone || '',
     cpf: cooperado?.cpf || '',
     status: cooperado?.status || 'Ativo',
+    dataInicio: cooperado?.dataInicio || '',
     endereco: cooperado?.endereco || '',
     bairro: cooperado?.bairro || '',
     cidade: cooperado?.cidade || '',
@@ -66,27 +67,91 @@ export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) 
   return (
     <ModalBackdrop onClose={onClose}>
       <div className="bg-white dark:bg-gray-800 rounded-[3rem] p-10 shadow-2xl border border-white/10 animate-fade-in">
-        <h3 className="text-2xl font-black mb-8 dark:text-white uppercase tracking-tighter">
-          {cooperado ? 'Editar Profissional' : 'Novo Cooperado'}
+        <h3 className="text-3xl font-black mb-8 dark:text-white uppercase tracking-tighter">
+          {cooperado ? 'Editar Cadastro' : 'Novo Cooperado'}
         </h3>
-        <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField label="Nome Completo" required>
-              <input value={formData.nomeCompleto} onChange={e => setFormData({...formData, nomeCompleto: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" required />
-            </FormField>
-            <FormField label="Função" required>
-              <input value={formData.funcao} onChange={e => setFormData({...formData, funcao: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" required />
-            </FormField>
-            <FormField label="E-mail" required>
-              <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" required />
-            </FormField>
-            <FormField label="Telefone">
-              <input value={formData.telefone} onChange={e => setFormData({...formData, telefone: formatPhone(e.target.value)})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+        
+        <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-10">
+          {/* SEÇÃO 1: IDENTIFICAÇÃO */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-2">
+              <User className="h-4 w-4 text-blue-600" />
+              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Informações Pessoais</h4>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField label="Nome Completo" required>
+                <input value={formData.nomeCompleto} onChange={e => setFormData({...formData, nomeCompleto: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" required />
+              </FormField>
+              <FormField label="Função / Cargo" required>
+                <input value={formData.funcao} onChange={e => setFormData({...formData, funcao: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" required />
+              </FormField>
+              <FormField label="E-mail" required>
+                <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" required />
+              </FormField>
+              <FormField label="Telefone / WhatsApp">
+                <input value={formData.telefone} onChange={e => setFormData({...formData, telefone: formatPhone(e.target.value)})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+              </FormField>
+              <FormField label="CPF">
+                <input value={formData.cpf} onChange={e => setFormData({...formData, cpf: formatCPF(e.target.value)})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+              </FormField>
+              <FormField label="Status" required>
+                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="form-select rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full">
+                  <option value="Ativo">Ativo</option>
+                  <option value="Inativo">Inativo</option>
+                </select>
+              </FormField>
+              <FormField label="Data de Início" required>
+                <input type="date" value={formData.dataInicio} onChange={e => setFormData({...formData, dataInicio: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" required />
+              </FormField>
+            </div>
+          </div>
+
+          {/* SEÇÃO 2: ENDEREÇO */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-2">
+              <MapPin className="h-4 w-4 text-blue-600" />
+              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Endereço Residencial</h4>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="md:col-span-2">
+                <FormField label="Logradouro / Rua">
+                  <input value={formData.endereco} onChange={e => setFormData({...formData, endereco: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+                </FormField>
+              </div>
+              <FormField label="Bairro">
+                <input value={formData.bairro} onChange={e => setFormData({...formData, bairro: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+              </FormField>
+              <FormField label="Cidade">
+                <input value={formData.cidade} onChange={e => setFormData({...formData, cidade: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+              </FormField>
+              <FormField label="UF">
+                <select value={formData.uf} onChange={e => setFormData({...formData, uf: e.target.value})} className="form-select rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full">
+                  <option value="">Selecione...</option>
+                  {UFS.map(uf => <option key={uf} value={uf}>{uf}</option>)}
+                </select>
+              </FormField>
+              <FormField label="CEP">
+                <input value={formData.cep} onChange={e => setFormData({...formData, cep: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+              </FormField>
+            </div>
+          </div>
+
+          {/* SEÇÃO 3: SEGURANÇA */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-2">
+              <HeartPulse className="h-4 w-4 text-rose-500" />
+              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Segurança e Emergência</h4>
+            </div>
+            <FormField label="Contato de Emergência (Nome e Telefone)">
+              <input value={formData.contatoEmergencia} onChange={e => setFormData({...formData, contatoEmergencia: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" placeholder="Ex: Maria (Esposa) - (11) 99999-9999" />
             </FormField>
           </div>
-          <div className="flex gap-4 pt-4">
+
+          <div className="flex gap-4 pt-6">
             <ActionButton variant="secondary" className="flex-1" onClick={onClose} type="button">Cancelar</ActionButton>
-            <ActionButton variant="primary" className="flex-[2]" type="submit">Salvar Profissional</ActionButton>
+            <ActionButton variant="primary" className="flex-[2]" type="submit">Salvar Alterações</ActionButton>
           </div>
         </form>
       </div>

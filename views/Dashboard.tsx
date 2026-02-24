@@ -10,7 +10,8 @@ import {
   CheckCircle2,
   Clock,
   ArrowUpRight,
-  Info
+  Info,
+  ReceiptText
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { Skeleton } from '../components/UI';
@@ -47,7 +48,6 @@ export default function DashboardView() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      // OTIMIZAÇÃO: Não trazemos logo_data (Base64 pesado) para o Dashboard
       const [fat, cli, proj] = await Promise.all([
         supabase.from('faturamentos').select('valor, valor_realizado, status, mes_referencia, cliente_id, projeto_id'),
         supabase.from('clientes').select('id, nome'),
@@ -76,12 +76,14 @@ export default function DashboardView() {
       return isYearMatch && isMonthMatch;
     });
 
-    const totalFaturado = filteredData.reduce((acc, curr) => acc + (Number(curr.valor_realizado) || Number(curr.valor) || 0), 0);
-    const totalRecebido = filteredData.filter(f => f.status === 'Pago').reduce((acc, curr) => acc + (Number(curr.valor_realizado) || 0), 0);
-    const ytd = data.faturamentos
-      .filter(f => f.mes_referencia?.startsWith(selectedYear) && f.status === 'Pago')
-      .reduce((acc, curr) => acc + (Number(curr.valor_realizado) || 0), 0);
-    const projection = data.faturamentos.filter(f => f.mes_referencia?.startsWith(selectedYear)).reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
+    const totalPlanejado = filteredData.reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
+    const totalFaturado = filteredData.filter(f => f.status === 'Faturado').reduce((acc, curr) => acc + (Number(curr.valor_realizado) || Number(curr.valor) || 0), 0);
+    
+    const ytdPlanejado = data.faturamentos
+      .filter(f => f.mes_referencia?.startsWith(selectedYear))
+      .reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
+    
+    const recebimentoEsperado = filteredData.filter(f => f.status !== 'Faturado').reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
 
     const pipelineCount = {
       previsto: filteredData.filter(f => f.status === 'Previsto').length,
@@ -89,32 +91,21 @@ export default function DashboardView() {
       validado: filteredData.filter(f => f.status === 'Validado com Cliente').length,
       solicitado: filteredData.filter(f => f.status === 'Solicitação Enviada').length,
       nota: filteredData.filter(f => f.status === 'Nota Enviada').length,
-      pago: filteredData.filter(f => f.status === 'Pago').length,
+      faturado: filteredData.filter(f => f.status === 'Faturado').length,
     };
 
     const clientSummary = data.clientes.map(c => {
-      const total = filteredData.filter(f => f.cliente_id === c.id).reduce((acc, curr) => acc + (Number(curr.valor_realizado) || Number(curr.valor) || 0), 0);
+      const total = filteredData.filter(f => f.cliente_id === c.id).reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
       return { nome: c.nome, total };
     }).filter(c => c.total > 0).sort((a, b) => b.total - a.total);
 
     const projectSummary = data.projetos.map(p => {
-      const total = filteredData.filter(f => f.projeto_id === p.id).reduce((acc, curr) => acc + (Number(curr.valor_realizado) || Number(curr.valor) || 0), 0);
+      const total = filteredData.filter(f => f.projeto_id === p.id).reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
       return { nome: p.nome, total };
     }).filter(p => p.total > 0).sort((a, b) => b.total - a.total).slice(0, 6);
 
-    return { totalFaturado, totalRecebido, ytd, projection, pipelineCount, clientSummary, projectSummary };
+    return { totalPlanejado, totalFaturado, ytdPlanejado, recebimentoEsperado, pipelineCount, clientSummary, projectSummary };
   }, [data, selectedMonth, selectedYear]);
-
-  const trendData = useMemo(() => {
-    return MONTHS.map(m => {
-      const monthStr = `${selectedYear}-${m.val}`;
-      const monthlyFats = data.faturamentos.filter(f => f.mes_referencia === monthStr);
-      const planejado = monthlyFats.reduce((acc, curr) => acc + (Number(curr.valor) || 0), 0);
-      const emitido = monthlyFats.filter(f => ['Nota Enviada', 'Pago'].includes(f.status)).reduce((acc, curr) => acc + (Number(curr.valor_realizado) || 0), 0);
-      const pago = monthlyFats.filter(f => f.status === 'Pago').reduce((acc, curr) => acc + (Number(curr.valor_realizado) || 0), 0);
-      return { label: m.label, planejado, emitido, pago };
-    });
-  }, [data.faturamentos, selectedYear]);
 
   if (loading) return (
     <div className="p-8 space-y-8 animate-pulse">
@@ -148,10 +139,10 @@ export default function DashboardView() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <SummaryCard label={selectedMonth ? "Faturado no Período" : "Faturado no Ano"} value={formatCurrency(stats.totalFaturado)} icon={DollarSign} color="blue" />
-        <SummaryCard label="Total Recebido" value={formatCurrency(stats.totalRecebido)} icon={Landmark} color="indigo" />
-        <SummaryCard label={`YTD (${selectedYear})`} value={formatCurrency(stats.ytd)} icon={Calendar} color="violet" />
-        <SummaryCard label={`Projeção ${selectedYear}`} value={formatCurrency(stats.projection)} icon={TrendingUp} color="emerald" />
+        <SummaryCard label={selectedMonth ? "Planejado no Período" : "Planejado no Ano"} value={formatCurrency(stats.totalPlanejado)} icon={Calendar} color="blue" />
+        <SummaryCard label="Total Faturado" value={formatCurrency(stats.totalFaturado)} icon={ReceiptText} color="indigo" />
+        <SummaryCard label={`Planejado YTD (${selectedYear})`} value={formatCurrency(stats.ytdPlanejado)} icon={TrendingUp} color="violet" />
+        <SummaryCard label="Recebimento Esperado" value={formatCurrency(stats.recebimentoEsperado)} icon={Clock} color="emerald" />
       </div>
 
       <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] p-8 shadow-sm border border-gray-100 dark:border-gray-700">
@@ -162,7 +153,7 @@ export default function DashboardView() {
           <PipelineStep label="Validado" count={stats.pipelineCount.validado} active={stats.pipelineCount.validado > 0} />
           <PipelineStep label="Solicitado" count={stats.pipelineCount.solicitado} active={stats.pipelineCount.solicitado > 0} />
           <PipelineStep label="Nota Enviada" count={stats.pipelineCount.nota} active={stats.pipelineCount.nota > 0} />
-          <PipelineStep label="Pago" count={stats.pipelineCount.pago} active={stats.pipelineCount.pago > 0} last />
+          <PipelineStep label="Faturado" count={stats.pipelineCount.faturado} active={stats.pipelineCount.faturado > 0} last />
         </div>
       </div>
 
