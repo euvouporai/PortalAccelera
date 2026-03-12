@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { List, LayoutGrid, Plus, Edit, Trash2, User, PieChart, MessageSquare, Sun, ArrowRight, Search, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, CheckCircle2, AlertCircle, Phone, MapPin, Coins, Calendar, UserCheck, Briefcase, Clock, Building, TrendingUp, History, Info, Star, Wallet, Award, Plane, Mail, HeartPulse } from 'lucide-react';
+import { List, LayoutGrid, Plus, Edit, Trash2, User, PieChart, MessageSquare, Sun, ArrowRight, Search, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, CheckCircle2, AlertCircle, Phone, MapPin, Coins, Calendar, UserCheck, Briefcase, Clock, Building, TrendingUp, History, Info, Star, Wallet, Award, Plane, Mail, HeartPulse, ShieldCheck, FileSignature } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useToast, Skeleton, Pagination } from '../components/UI';
 import { CooperadoFormModal, ConfirmDeleteModal, FeriasFormModal, RemuneracaoFormModal, FeedbackFormModal, FeriasDetalheModal } from '../components/Modals';
@@ -83,21 +83,29 @@ export function CooperadosView() {
 
   const handleSaveNew = async (d: any) => {
     try {
-      const payload = sanitizePayload({
-        nome_completo: d.nomeCompleto,
-        funcao: d.funcao,
-        email: d.email,
-        telefone: d.telefone,
-        cpf: d.cpf,
-        status: d.status,
-        data_inicio: d.dataInicio,
-        endereco: d.endereco,
-        bairro: d.bairro,
-        cidade: d.cidade,
-        uf: d.uf,
-        cep: d.cep,
-        contato_emergencia: d.contatoEmergencia
-      });
+      const payload = {
+        ...sanitizePayload({
+          nome_completo: d.nomeCompleto,
+          funcao: d.funcao,
+          email: d.email,
+          telefone: d.telefone,
+          cpf: d.cpf,
+          status: d.status,
+          data_inicio: d.dataInicio,
+          endereco: d.endereco,
+          bairro: d.bairro,
+          cidade: d.cidade,
+          uf: d.uf,
+          cep: d.cep,
+          contato_emergencia: d.contatoEmergencia,
+          rg: d.rg,
+          data_nascimento: d.dataNascimento,
+          ponto_referencia: d.pontoReferencia,
+          lgpd_aceite: d.lgpdAceite,
+          nda_assinado: d.ndaAssinado
+        }),
+        user_id: state.userId
+      };
       const { error } = await supabase.from('cooperados').insert([payload]);
       if (error) throw error;
       addToast("Novo profissional cadastrado!");
@@ -271,7 +279,8 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
 
       {isEdit && (
         <CooperadoFormModal isOpen={isEdit} onClose={() => setIsEdit(false)} onSave={async (d: any) => {
-            const payload = sanitizePayload({
+            const payload = {
+              ...sanitizePayload({
                 nome_completo: d.nomeCompleto,
                 funcao: d.funcao,
                 email: d.email,
@@ -284,8 +293,15 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
                 cidade: d.cidade,
                 uf: d.uf,
                 cep: d.cep,
-                contato_emergencia: d.contatoEmergencia
-            });
+                contato_emergencia: d.contatoEmergencia,
+                rg: d.rg,
+                data_nascimento: d.dataNascimento,
+                ponto_referencia: d.pontoReferencia,
+                lgpd_aceite: d.lgpdAceite,
+                nda_assinado: d.ndaAssinado
+              }),
+              user_id: state.userId
+            };
             const { error } = await supabase.from('cooperados').update(payload).eq('id', cooperadoId);
             if (!error) {
               setIsEdit(false);
@@ -307,7 +323,12 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
           cidade: cooperado.cidade,
           uf: cooperado.uf,
           cep: cooperado.cep,
-          contatoEmergencia: cooperado.contato_emergencia
+          contatoEmergencia: cooperado.contato_emergencia,
+          rg: cooperado.rg,
+          dataNascimento: cooperado.data_nascimento,
+          pontoReferencia: cooperado.ponto_referencia,
+          lgpdAceite: cooperado.lgpd_aceite,
+          ndaAssinado: cooperado.nda_assinado
         }} />
       )}
 
@@ -348,6 +369,8 @@ function TabDadosCooperado({ cooperado }: any) {
         <DetailBox label="E-MAIL" value={cooperado.email} icon={Mail} />
         <DetailBox label="TELEFONE / WHATSAPP" value={cooperado.telefone} icon={Phone} />
         <DetailBox label="CPF" value={cooperado.cpf} />
+        <DetailBox label="RG" value={cooperado.rg} />
+        <DetailBox label="DATA NASCIMENTO" value={formatDateBR(cooperado.data_nascimento)} icon={Calendar} />
         <DetailBox label="DATA INÍCIO" value={formatDateBR(cooperado.data_inicio)} icon={Calendar} />
       </div>
 
@@ -358,12 +381,35 @@ function TabDadosCooperado({ cooperado }: any) {
         <DetailBox label="CIDADE" value={cooperado.cidade} />
         <DetailBox label="ESTADO (UF)" value={cooperado.uf} />
         <DetailBox label="CEP" value={cooperado.cep} />
+        <div className="md:col-span-3"><DetailBox label="PONTO DE REFERÊNCIA" value={cooperado.ponto_referencia} /></div>
       </div>
 
       <SectionHeader title="Segurança e Emergência" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="md:col-span-1">
           <DetailBox label="CONTATO DE EMERGÊNCIA" value={cooperado.contato_emergencia} icon={HeartPulse} />
+        </div>
+      </div>
+
+      <SectionHeader title="Termos e Conformidade" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="flex items-center gap-4 p-6 bg-gray-50/50 dark:bg-gray-900/30 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 shadow-inner">
+          <div className={`p-2 rounded-lg ${cooperado.lgpd_aceite ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+            <ShieldCheck className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">TERMO LGPD</p>
+            <p className="font-black text-gray-900 dark:text-white text-base">{cooperado.lgpd_aceite ? 'ACEITO' : 'NÃO ACEITO'}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 p-6 bg-gray-50/50 dark:bg-gray-900/30 rounded-[1.5rem] border border-gray-100 dark:border-gray-700 shadow-inner">
+          <div className={`p-2 rounded-lg ${cooperado.nda_assinado ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-400'}`}>
+            <FileSignature className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">NDA</p>
+            <p className="font-black text-gray-900 dark:text-white text-base">{cooperado.nda_assinado ? 'ASSINADO' : 'NÃO ASSINADO'}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -424,7 +470,7 @@ function TabAlocacoesCooperado({ cooperadoId }: { cooperadoId: string }) {
 }
 
 function TabFeriasCooperado({ cooperado }: { cooperado: any }) {
-  const { supabase } = useAppContext();
+  const { state, supabase } = useAppContext();
   const { addToast } = useToast();
   const [ferias, setFerias] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -465,12 +511,18 @@ function TabFeriasCooperado({ cooperado }: { cooperado: any }) {
 
   const handleSaveFerias = async (d: any) => {
     try {
-      const payload = { ...sanitizePayload(d), cooperado_id: cooperado.id };
+      const payload = { 
+        ...sanitizePayload(d), 
+        cooperado_id: cooperado.id,
+        user_id: state.userId
+      };
       if (editingFerias) {
-        await supabase.from('ferias').update(payload).eq('id', editingFerias.id);
+        const { error } = await supabase.from('ferias').update(payload).eq('id', editingFerias.id);
+        if (error) throw error;
         addToast("Atualizado!");
       } else {
-        await supabase.from('ferias').insert([payload]);
+        const { error } = await supabase.from('ferias').insert([payload]);
+        if (error) throw error;
         addToast("Solicitação enviada!");
       }
       setIsModalOpen(false);
@@ -484,7 +536,8 @@ function TabFeriasCooperado({ cooperado }: { cooperado: any }) {
   const handleDeleteFerias = async () => {
     if (!feriasToDelete) return;
     try {
-      await supabase.from('ferias').delete().eq('id', feriasToDelete);
+      const { error } = await supabase.from('ferias').delete().eq('id', feriasToDelete);
+      if (error) throw error;
       addToast("Excluído com sucesso!");
       fetchFerias();
     } catch (e: any) {
@@ -556,7 +609,7 @@ function TabFeriasCooperado({ cooperado }: { cooperado: any }) {
 }
 
 function TabRemuneracaoCooperado({ cooperado }: { cooperado: any }) {
-  const { supabase } = useAppContext();
+  const { state, supabase } = useAppContext();
   const { addToast } = useToast();
   const [remuneracoes, setRemuneracoes] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -600,11 +653,15 @@ function TabRemuneracaoCooperado({ cooperado }: { cooperado: any }) {
         vigencia: d.dataVigencia,
         valor_hora: d.valorHora ? Number(d.valorHora) : null,
         valor_fixo: d.valorFixo ? Number(d.valorFixo) : null,
-        observacao: d.observacao || null
+        observacao: d.observacao || null,
+        user_id: state.userId
       };
 
-      if (editingItem) await supabase.from('remuneracoes_historico').update(payload).eq('id', editingItem.id);
-      else await supabase.from('remuneracoes_historico').insert([payload]);
+      const { error } = editingItem 
+        ? await supabase.from('remuneracoes_historico').update(payload).eq('id', editingItem.id)
+        : await supabase.from('remuneracoes_historico').insert([payload]);
+
+      if (error) throw error;
 
       setIsModalOpen(false);
       setEditingItem(null);

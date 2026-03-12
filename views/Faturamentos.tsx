@@ -191,7 +191,8 @@ export default function FaturamentosView() {
           data_envio: data.dataEnvio,
           data_pedido: data.dataPedido,
           data_nota: data.dataNota,
-          observacao: data.observacao
+          observacao: data.observacao,
+          user_id: state.userId
         });
         const { error } = await supabase.from('faturamentos').update(payload).eq('id', editingItem.id);
         if (error) throw error;
@@ -763,7 +764,15 @@ function TabAlocacaoFaturamento({ faturamento, refreshDetail }: any) {
 
   const handleSaveAloc = async (data: any) => {
     try {
-      const payload = { faturamento_id: faturamento.id, cooperado_id: data.cooperadoId, percentual: Number(data.percentual || 100), valor_hora: Number(data.valorHora), horas_mensais: Number(data.horasMensais || 0), registrado_por: state.userName };
+      const payload = { 
+        faturamento_id: faturamento.id, 
+        cooperado_id: data.cooperadoId, 
+        percentual: Number(data.percentual || 100), 
+        valor_hora: Number(data.valorHora), 
+        horas_mensais: Number(data.horasMensais || 0), 
+        registrado_por: state.userName,
+        user_id: state.userId
+      };
       if (editingAloc) {
         const { error } = await supabase.from('faturamentos_alocacoes').update(payload).eq('id', editingAloc.id);
         if (error) throw error;

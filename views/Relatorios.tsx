@@ -232,14 +232,14 @@ function TimelineReport({ data }: { data: any }) {
 }
 
 function CapacityReport({ data, onUpdate }: { data: any, onUpdate: () => void }) {
-  const { supabase } = useAppContext();
+  const { state, supabase } = useAppContext();
   const { addToast } = useToast();
 
   const handleTogglePrincipal = async (cooperado: any) => {
     try {
       const { error } = await supabase
         .from('cooperados')
-        .update({ is_principal: !cooperado.is_principal })
+        .update({ is_principal: !cooperado.is_principal, user_id: state.userId })
         .eq('id', cooperado.id);
       
       if (error) throw error;

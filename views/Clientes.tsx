@@ -81,7 +81,7 @@ export function ClientesView() {
 
       <Pagination currentPage={currentPage} totalPages={Math.ceil(filtered.length / itemsPerPage)} onPageChange={setCurrentPage} totalItems={filtered.length} itemsPerPage={itemsPerPage} />
 
-      {isModalOpen && <ClienteFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={async (d:any) => { await supabase.from('clientes').insert([d]); setIsModalOpen(false); fetchClientes(); addToast("Cliente criado!"); }} />}
+      {isModalOpen && <ClienteFormModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} onSave={async (d:any) => { await supabase.from('clientes').insert([{ ...d, user_id: state.userId }]); setIsModalOpen(false); fetchClientes(); addToast("Cliente criado!"); }} />}
     </div>
   );
 }
@@ -174,7 +174,7 @@ export function ClienteDetalheView({ clienteId }: { clienteId: string }) {
         {tab === 'contratos' && <TabContratosCliente clienteId={clienteId} />}
       </div>
 
-      {isEdit && <ClienteFormModal isOpen={isEdit} onClose={() => setIsEdit(false)} onSave={async (d:any) => { await supabase.from('clientes').update(d).eq('id', clienteId); setIsEdit(false); fetchCliente(); addToast("Atualizado!"); }} item={cliente} />}
+      {isEdit && <ClienteFormModal isOpen={isEdit} onClose={() => setIsEdit(false)} onSave={async (d:any) => { await supabase.from('clientes').update({ ...d, user_id: state.userId }).eq('id', clienteId); setIsEdit(false); fetchCliente(); addToast("Atualizado!"); }} item={cliente} />}
       {isConfirmDelete && <ConfirmDeleteModal isOpen={isConfirmDelete} onClose={() => setIsConfirmDelete(false)} onConfirm={async () => { await supabase.from('clientes').delete().eq('id', clienteId); dispatch({type:'NAVIGATE', payload:{view:'clientes'}}); addToast("Removido."); }} title="Excluir Cliente" message="Tem certeza?" />}
     </div>
   );
@@ -215,7 +215,8 @@ function TabContratosCliente({ clienteId }: { clienteId: string }) {
       const payload = {
         ...sanitizePayload(formData),
         cliente_id: clienteId,
-        registrado_por: state.userName
+        registrado_por: state.userName,
+        user_id: state.userId
       };
 
       if (editingContrato) {
@@ -236,7 +237,8 @@ function TabContratosCliente({ clienteId }: { clienteId: string }) {
       const payload = {
         ...sanitizePayload(formData),
         contrato_id: selectedContratoId,
-        registrado_por: state.userName
+        registrado_por: state.userName,
+        user_id: state.userId
       };
       await supabase.from('contratos_aditivos').insert([payload]);
       addToast("Aditivo registrado com sucesso!");

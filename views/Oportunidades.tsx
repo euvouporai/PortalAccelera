@@ -458,7 +458,7 @@ function TabOportunidadeDados({ op }: { op: any }) {
 }
 
 function TabOportunidadeContatos({ oportunidadeId }: { oportunidadeId: string }) {
-  const { supabase } = useAppContext();
+  const { state, supabase } = useAppContext();
   const { addToast } = useToast();
   const [contatos, setContatos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -499,7 +499,7 @@ function TabOportunidadeContatos({ oportunidadeId }: { oportunidadeId: string })
         if (error) throw error;
         addToast("Contato atualizado!");
       } else {
-        const { error } = await supabase.from('oportunidades_contatos').insert([{ ...formData, oportunidade_id: oportunidadeId }]);
+        const { error } = await supabase.from('oportunidades_contatos').insert([{ ...formData, oportunidade_id: oportunidadeId, user_id: state.userId }]);
         if (error) throw error;
         addToast("Contato adicionado!");
       }

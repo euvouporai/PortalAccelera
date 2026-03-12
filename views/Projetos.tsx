@@ -305,7 +305,8 @@ export function ProjetoDetalheView({ projetoId }: { projetoId: string }) {
         cliente_id: data.clienteId,
         data_inicio: data.dataInicio || null,
         data_fim: data.dataFim || null,
-        status: 'Ativo' // Mantém ativo ao editar
+        status: 'Ativo', // Mantém ativo ao editar
+        user_id: state.userId
       });
       const { error } = await supabase.from('projetos').update(payload).eq('id', projetoId);
       if (error) throw error;

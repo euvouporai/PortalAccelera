@@ -59,7 +59,12 @@ export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) 
     cidade: cooperado?.cidade || '',
     uf: cooperado?.uf || '',
     cep: cooperado?.cep || '',
-    contatoEmergencia: cooperado?.contatoEmergencia || ''
+    contatoEmergencia: cooperado?.contatoEmergencia || '',
+    rg: cooperado?.rg || '',
+    dataNascimento: cooperado?.dataNascimento || '',
+    pontoReferencia: cooperado?.pontoReferencia || '',
+    lgpdAceite: cooperado?.lgpdAceite || false,
+    ndaAssinado: cooperado?.ndaAssinado || false
   });
 
   if (!isOpen) return null;
@@ -94,6 +99,12 @@ export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) 
               </FormField>
               <FormField label="CPF">
                 <input value={formData.cpf} onChange={e => setFormData({...formData, cpf: formatCPF(e.target.value)})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+              </FormField>
+              <FormField label="RG">
+                <input value={formData.rg} onChange={e => setFormData({...formData, rg: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
+              </FormField>
+              <FormField label="Data de Nascimento">
+                <input type="date" value={formData.dataNascimento} onChange={e => setFormData({...formData, dataNascimento: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
               </FormField>
               <FormField label="Status" required>
                 <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="form-select rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full">
@@ -135,6 +146,11 @@ export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) 
               <FormField label="CEP">
                 <input value={formData.cep} onChange={e => setFormData({...formData, cep: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
               </FormField>
+              <div className="md:col-span-3">
+                <FormField label="Ponto de Referência">
+                  <input value={formData.pontoReferencia} onChange={e => setFormData({...formData, pontoReferencia: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" placeholder="Ex: Próximo ao mercado central" />
+                </FormField>
+              </div>
             </div>
           </div>
 
@@ -147,6 +163,24 @@ export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) 
             <FormField label="Contato de Emergência (Nome e Telefone)">
               <input value={formData.contatoEmergencia} onChange={e => setFormData({...formData, contatoEmergencia: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" placeholder="Ex: Maria (Esposa) - (11) 99999-9999" />
             </FormField>
+          </div>
+
+          {/* SEÇÃO 4: CONFORMIDADE */}
+          <div className="space-y-6">
+            <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-700 pb-2">
+              <ShieldCheck className="h-4 w-4 text-emerald-500" />
+              <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">Termos e Conformidade</h4>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <label className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all">
+                <input type="checkbox" checked={formData.lgpdAceite} onChange={e => setFormData({...formData, lgpdAceite: e.target.checked})} className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">Termo LGPD Aceito</span>
+              </label>
+              <label className="flex items-center gap-3 p-4 bg-gray-50 dark:bg-gray-900 rounded-2xl cursor-pointer hover:bg-gray-100 transition-all">
+                <input type="checkbox" checked={formData.ndaAssinado} onChange={e => setFormData({...formData, ndaAssinado: e.target.checked})} className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                <span className="text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">NDA Assinado</span>
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-4 pt-6">
