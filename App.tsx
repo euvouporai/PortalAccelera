@@ -18,6 +18,7 @@ import OportunidadesView from './views/Oportunidades';
 import InsightsIAView from './views/Insights';
 import UsuariosView from './views/Usuarios';
 import SettingsView from './views/Settings';
+import EquipamentosView, { EquipamentoDetalheView } from './views/Equipamentos';
 
 function LoadingScreen({ message = "Carregando Portal..." }) {
   return (
@@ -213,6 +214,8 @@ function RenderCurrentView() {
     case 'detalheOportunidade':
       return <OportunidadesView />;
     case 'relatorios': return <RelatoriosIAView />;
+    case 'equipamentos': return <EquipamentosView />;
+    case 'detalheEquipamento': return <EquipamentoDetalheView equipamentoId={state.selectedId || ''} />;
     case 'insights': return <InsightsIAView />;
     case 'usuarios': return <UsuariosView />;
     case 'settings': return <SettingsView />;

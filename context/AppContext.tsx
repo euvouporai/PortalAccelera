@@ -132,6 +132,8 @@ export function appReducer(state: AppState, action: Action): AppState {
           relatorios: 'Relatórios',
           insights: 'Insights de IA',
           usuarios: 'Gestão de Usuários',
+          equipamentos: 'Equipamentos',
+          detalheEquipamento: 'Detalhes do Equipamento',
           settings: 'Configurações'
         };
         newBreadcrumbs.push({ 

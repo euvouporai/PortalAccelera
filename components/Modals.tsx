@@ -23,7 +23,7 @@ const FormField = ({ label, required, children }: { label: string, required?: bo
   </div>
 );
 
-const ModalBackdrop = ({ children, onClose }: { children?: React.ReactNode, onClose: () => void }) => {
+const ModalBackdrop = ({ children, onClose, alignment = 'center' }: { children?: React.ReactNode, onClose: () => void, alignment?: 'center' | 'top' }) => {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => {
@@ -33,7 +33,7 @@ const ModalBackdrop = ({ children, onClose }: { children?: React.ReactNode, onCl
 
   return (
     <div 
-      className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-2xl p-4 animate-grow"
+      className={`fixed inset-0 z-[999] flex justify-center bg-black/70 backdrop-blur-2xl p-4 animate-grow ${alignment === 'top' ? 'items-start pt-10' : 'items-center'}`}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-2xl max-h-[95vh] overflow-y-auto no-scrollbar outline-none">
@@ -46,6 +46,10 @@ const ModalBackdrop = ({ children, onClose }: { children?: React.ReactNode, onCl
 // --- MODALS ---
 
 export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) {
+  useEffect(() => {
+    console.log('CooperadoFormModal: cooperado prop:', cooperado);
+  }, [cooperado]);
+
   const [formData, setFormData] = useState({
     nomeCompleto: cooperado?.nomeCompleto || '',
     funcao: cooperado?.funcao || '',
@@ -64,13 +68,14 @@ export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) 
     dataNascimento: cooperado?.dataNascimento || '',
     pontoReferencia: cooperado?.pontoReferencia || '',
     lgpdAceite: cooperado?.lgpdAceite || false,
-    ndaAssinado: cooperado?.ndaAssinado || false
+    ndaAssinado: cooperado?.ndaAssinado || false,
+    emailAccelera: cooperado?.emailAccelera || ''
   });
 
   if (!isOpen) return null;
 
   return (
-    <ModalBackdrop onClose={onClose}>
+    <ModalBackdrop onClose={onClose} alignment="top">
       <div className="bg-white dark:bg-gray-800 rounded-[3rem] p-10 shadow-2xl border border-white/10 animate-fade-in">
         <h3 className="text-3xl font-black mb-8 dark:text-white uppercase tracking-tighter">
           {cooperado ? 'Editar Cadastro' : 'Novo Cooperado'}
@@ -93,6 +98,9 @@ export function CooperadoFormModal({ isOpen, onClose, onSave, cooperado }: any) 
               </FormField>
               <FormField label="E-mail" required>
                 <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" required />
+              </FormField>
+              <FormField label="E-mail Accelera">
+                <input type="email" value={formData.emailAccelera} onChange={e => setFormData({...formData, emailAccelera: e.target.value})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
               </FormField>
               <FormField label="Telefone / WhatsApp">
                 <input value={formData.telefone} onChange={e => setFormData({...formData, telefone: formatPhone(e.target.value)})} className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" />
@@ -854,6 +862,260 @@ export function FaturamentoFormModal({ isOpen, onClose, onSave, clientes, projet
             </ActionButton>
           </div>
         </form>
+      </div>
+    </ModalBackdrop>
+  );
+}
+
+export function EquipamentoFormModal({ isOpen, onClose, onSave, initialData }: any) {
+  const [formData, setFormData] = useState({
+    nome: initialData?.nome || '',
+    fabricante: initialData?.fabricante || '',
+    processador: initialData?.processador || '',
+    placa_video: initialData?.placa_video || '',
+    memoria: initialData?.memoria || '',
+    caracteristicas: initialData?.caracteristicas || '',
+    status: initialData?.status || 'Disponível',
+    codigoEquipamento: initialData?.codigo_equipamento || ''
+  });
+
+  if (!isOpen) return null;
+
+  return (
+    <ModalBackdrop onClose={onClose}>
+      <div className="bg-white dark:bg-gray-800 rounded-[3rem] p-10 shadow-2xl border border-white/10 animate-fade-in max-w-2xl w-full">
+        <h3 className="text-3xl font-black mb-8 dark:text-white uppercase tracking-tighter">
+          {initialData ? 'Editar Equipamento' : 'Novo Equipamento'}
+        </h3>
+        
+        <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <FormField label="Equipamento (Modelo)" required>
+              <input 
+                value={formData.nome} 
+                onChange={e => setFormData({...formData, nome: e.target.value})} 
+                className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" 
+                placeholder="Ex: Latitude 3420"
+                required 
+              />
+            </FormField>
+            <FormField label="Código do Equipamento">
+              <input 
+                value={formData.codigoEquipamento} 
+                onChange={e => setFormData({...formData, codigoEquipamento: e.target.value.slice(0, 20)})} 
+                className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" 
+                placeholder="Ex: EQ-12345678901234567890"
+                maxLength={20}
+              />
+            </FormField>
+            <FormField label="Fabricante">
+              <input 
+                value={formData.fabricante} 
+                onChange={e => setFormData({...formData, fabricante: e.target.value})} 
+                className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" 
+                placeholder="Ex: Dell, Apple, Lenovo"
+              />
+            </FormField>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <FormField label="Processador">
+              <input 
+                value={formData.processador} 
+                onChange={e => setFormData({...formData, processador: e.target.value})} 
+                className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" 
+                placeholder="Ex: i7-1165G7"
+              />
+            </FormField>
+            <FormField label="Placa de Vídeo">
+              <input 
+                value={formData.placa_video} 
+                onChange={e => setFormData({...formData, placa_video: e.target.value})} 
+                className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" 
+                placeholder="Ex: Iris Xe"
+              />
+            </FormField>
+            <FormField label="Memória">
+              <input 
+                value={formData.memoria} 
+                onChange={e => setFormData({...formData, memoria: e.target.value})} 
+                className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" 
+                placeholder="Ex: 16GB DDR4"
+              />
+            </FormField>
+          </div>
+
+          <FormField label="Outras Características">
+            <textarea 
+              value={formData.caracteristicas} 
+              onChange={e => setFormData({...formData, caracteristicas: e.target.value})} 
+              className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full h-24 resize-none" 
+              placeholder="SSD, Tela, Teclado, etc."
+            />
+          </FormField>
+
+          <FormField label="Status">
+            <select 
+              value={formData.status} 
+              onChange={e => setFormData({...formData, status: e.target.value})} 
+              className="form-select rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full"
+            >
+              <option value="Disponível">Disponível</option>
+              <option value="Em uso">Em uso</option>
+              <option value="Manutenção">Manutenção</option>
+              <option value="Baixado">Baixado</option>
+            </select>
+          </FormField>
+
+          <div className="pt-6 flex gap-4">
+            <button type="button" onClick={onClose} className="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-gray-200 transition-all">Cancelar</button>
+            <button type="submit" className="flex-[2] py-4 bg-blue-600 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-blue-700 shadow-xl shadow-blue-600/20 active:scale-95 transition-all">
+              Salvar Equipamento
+            </button>
+          </div>
+        </form>
+      </div>
+    </ModalBackdrop>
+  );
+}
+
+export function EquipamentoVinculoModal({ isOpen, onClose, onSave, equipamento, cooperados }: any) {
+  const [formData, setFormData] = useState({
+    cooperadoId: equipamento?.cooperado_id || '',
+    dataInicio: new Date().toISOString().split('T')[0],
+    dataFim: '',
+    responsavel: '',
+    tipo: equipamento?.cooperado_id ? 'Devolução' : 'Entrega',
+    observacao: ''
+  });
+
+  if (!isOpen) return null;
+
+  return (
+    <ModalBackdrop onClose={onClose}>
+      <div className="bg-white dark:bg-gray-800 rounded-[3rem] p-10 shadow-2xl border border-white/10 animate-fade-in max-w-xl w-full">
+        <h3 className="text-3xl font-black mb-2 dark:text-white uppercase tracking-tighter">
+          {formData.tipo === 'Entrega' ? 'Registrar Entrega' : 'Registrar Devolução'}
+        </h3>
+        <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest mb-8">
+          Equipamento: <span className="text-blue-600">{equipamento?.nome}</span>
+        </p>
+        
+        <form onSubmit={(e) => { e.preventDefault(); onSave(formData); }} className="space-y-6">
+          <div className="grid grid-cols-1 gap-6">
+            <FormField label="Cooperado" required>
+              <select 
+                value={formData.cooperadoId} 
+                onChange={e => setFormData({...formData, cooperadoId: e.target.value})} 
+                className="form-select rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full"
+                required
+                disabled={formData.tipo === 'Devolução'}
+              >
+                <option value="">Selecione o Cooperado...</option>
+                {cooperados.map((c: any) => (
+                  <option key={c.id} value={c.id}>{c.nome_completo}</option>
+                ))}
+              </select>
+            </FormField>
+
+            <div className="grid grid-cols-2 gap-4">
+              <FormField label="Data da Ação" required>
+                <input 
+                  type="date"
+                  value={formData.dataInicio} 
+                  onChange={e => setFormData({...formData, dataInicio: e.target.value})} 
+                  className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" 
+                  required
+                />
+              </FormField>
+              <FormField label="Responsável" required>
+                <input 
+                  value={formData.responsavel} 
+                  onChange={e => setFormData({...formData, responsavel: e.target.value})} 
+                  className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full" 
+                  placeholder="Quem entregou/recebeu?"
+                  required
+                />
+              </FormField>
+            </div>
+
+            <FormField label="Observações">
+              <textarea 
+                value={formData.observacao} 
+                onChange={e => setFormData({...formData, observacao: e.target.value})} 
+                className="form-input rounded-xl border-none bg-gray-50 dark:bg-gray-900 py-3 font-bold shadow-inner w-full h-24 resize-none" 
+                placeholder="Estado do equipamento, acessórios, etc."
+              />
+            </FormField>
+          </div>
+
+          <div className="pt-6 flex gap-4">
+            <button type="button" onClick={onClose} className="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-gray-200 transition-all">Cancelar</button>
+            <button type="submit" className={`flex-[2] py-4 text-white font-black uppercase text-[10px] tracking-widest rounded-2xl shadow-xl active:scale-95 transition-all ${formData.tipo === 'Entrega' ? 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20' : 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20'}`}>
+              Confirmar {formData.tipo}
+            </button>
+          </div>
+        </form>
+      </div>
+    </ModalBackdrop>
+  );
+}
+
+export function EquipamentoLogModal({ isOpen, onClose, logs }: any) {
+  if (!isOpen) return null;
+
+  return (
+    <ModalBackdrop onClose={onClose}>
+      <div className="bg-white dark:bg-gray-800 rounded-[3rem] p-10 shadow-2xl border border-white/10 animate-fade-in max-w-2xl w-full">
+        <h3 className="text-3xl font-black mb-8 dark:text-white uppercase tracking-tighter">
+          Histórico de Movimentação
+        </h3>
+        
+        <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+          {logs.length === 0 ? (
+            <div className="text-center py-12 text-gray-400 font-bold uppercase text-[10px] tracking-widest">
+              Nenhuma movimentação registrada.
+            </div>
+          ) : (
+            logs.map((log: any) => (
+              <div key={log.id} className="p-6 bg-gray-50 dark:bg-gray-900/50 rounded-[2rem] border border-gray-100 dark:border-gray-800 relative overflow-hidden group">
+                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${log.tipo === 'Entrega' ? 'bg-blue-600' : 'bg-amber-600'}`}></div>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest ${log.tipo === 'Entrega' ? 'bg-blue-100 text-blue-600' : 'bg-amber-100 text-amber-600'}`}>
+                      {log.tipo}
+                    </span>
+                    <h4 className="text-sm font-black text-gray-900 dark:text-white mt-2 uppercase tracking-tight">
+                      {log.cooperados?.nome_completo || 'N/A'}
+                    </h4>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Data</p>
+                    <p className="text-xs font-bold text-gray-900 dark:text-white">{new Date(log.data_inicio).toLocaleDateString('pt-BR')}</p>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Responsável</p>
+                    <p className="text-xs font-bold text-gray-700 dark:text-gray-300">{log.responsavel || '-'}</p>
+                  </div>
+                </div>
+
+                {log.observacao && (
+                  <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Observações</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 italic">"{log.observacao}"</p>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        <div className="pt-8">
+          <button onClick={onClose} className="w-full py-4 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-300 font-black uppercase text-[10px] tracking-widest rounded-2xl hover:bg-gray-200 transition-all">Fechar</button>
+        </div>
       </div>
     </ModalBackdrop>
   );

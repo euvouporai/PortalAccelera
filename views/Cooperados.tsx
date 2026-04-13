@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { List, LayoutGrid, Plus, Edit, Trash2, User, PieChart, MessageSquare, Sun, ArrowRight, Search, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, CheckCircle2, AlertCircle, Phone, MapPin, Coins, Calendar, UserCheck, Briefcase, Clock, Building, TrendingUp, History, Info, Star, Wallet, Award, Plane, Mail, HeartPulse, ShieldCheck, FileSignature } from 'lucide-react';
+import { List, LayoutGrid, Plus, Edit, Trash2, User, PieChart, MessageSquare, Sun, ArrowRight, Search, ArrowUpDown, ArrowUp, ArrowDown, CheckCircle, CheckCircle2, AlertCircle, Phone, MapPin, Coins, Calendar, UserCheck, Briefcase, Clock, Building, TrendingUp, History, Info, Star, Wallet, Award, Plane, Mail, HeartPulse, ShieldCheck, FileSignature, Laptop } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useToast, Skeleton, Pagination } from '../components/UI';
 import { CooperadoFormModal, ConfirmDeleteModal, FeriasFormModal, RemuneracaoFormModal, FeedbackFormModal, FeriasDetalheModal } from '../components/Modals';
@@ -102,7 +102,8 @@ export function CooperadosView() {
           data_nascimento: d.dataNascimento,
           ponto_referencia: d.pontoReferencia,
           lgpd_aceite: d.lgpdAceite,
-          nda_assinado: d.ndaAssinado
+          nda_assinado: d.ndaAssinado,
+          email_accelera: d.emailAccelera
         }),
         user_id: state.userId
       };
@@ -262,6 +263,7 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
           {id:'ferias', label:'Férias/Afastamentos', icon:Calendar},
           {id:'remuneracao', label:'Remuneração', icon:Coins}, 
           {id:'feedback', label:'Feedbacks', icon:MessageSquare},
+          {id:'equipamentos', label:'Equipamentos', icon:Laptop},
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)} className={`flex items-center px-8 py-4 rounded-[1.8rem] font-black uppercase text-[10px] tracking-widest transition-all ${tab === t.id ? 'bg-blue-600 text-white shadow-xl shadow-blue-500/20' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'}`}>
             <t.icon className="h-4 w-4 mr-2"/>{t.label}
@@ -275,6 +277,7 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
         {tab === 'ferias' && <TabFeriasCooperado cooperado={cooperado} />}
         {tab === 'remuneracao' && <TabRemuneracaoCooperado cooperado={cooperado} />}
         {tab === 'feedback' && <TabFeedbackCooperado cooperadoId={cooperadoId} />}
+        {tab === 'equipamentos' && <TabEquipamentosCooperado cooperadoId={cooperadoId} />}
       </div>
 
       {isEdit && (
@@ -298,7 +301,8 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
                 data_nascimento: d.dataNascimento,
                 ponto_referencia: d.pontoReferencia,
                 lgpd_aceite: d.lgpdAceite,
-                nda_assinado: d.ndaAssinado
+                nda_assinado: d.ndaAssinado,
+                email_accelera: d.emailAccelera
               }),
               user_id: state.userId
             };
@@ -317,7 +321,7 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
           telefone: cooperado.telefone,
           cpf: cooperado.cpf,
           status: cooperado.status,
-          dataInicio: cooperado.data_inicio,
+          dataInicio: cooperado.data_inicio || '',
           endereco: cooperado.endereco,
           bairro: cooperado.bairro,
           cidade: cooperado.cidade,
@@ -325,10 +329,11 @@ export function CooperadoDetalheView({ cooperadoId }: { cooperadoId: string }) {
           cep: cooperado.cep,
           contatoEmergencia: cooperado.contato_emergencia,
           rg: cooperado.rg,
-          dataNascimento: cooperado.data_nascimento,
+          dataNascimento: cooperado.data_nascimento || '',
           pontoReferencia: cooperado.ponto_referencia,
           lgpdAceite: cooperado.lgpd_aceite,
-          ndaAssinado: cooperado.nda_assinado
+          ndaAssinado: cooperado.nda_assinado,
+          emailAccelera: cooperado.email_accelera
         }} />
       )}
 
@@ -906,6 +911,90 @@ function TabFeedbackCooperado({ cooperadoId }: { cooperadoId: string }) {
           title="Excluir Feedback" 
           message="Tem certeza que deseja remover este registro de feedback? Esta ação não pode ser desfeita." 
         />
+      )}
+    </div>
+  );
+}
+
+function TabEquipamentosCooperado({ cooperadoId }: { cooperadoId: string }) {
+  const { supabase } = useAppContext();
+  const [equipamentos, setEquipamentos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchEquipamentos = useCallback(async () => {
+    setLoading(true);
+    const { data } = await supabase.from('equipamentos').select('*').eq('cooperado_id', cooperadoId).order('nome');
+    setEquipamentos(data || []);
+    setLoading(false);
+  }, [cooperadoId, supabase]);
+
+  useEffect(() => { fetchEquipamentos(); }, [fetchEquipamentos]);
+
+  if (loading) return <Skeleton className="h-40 w-full rounded-3xl" />;
+
+  const formatDateBR = (dateStr: string) => {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('-');
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tighter">Equipamentos Vinculados</h3>
+      </div>
+
+      {equipamentos.length === 0 ? (
+        <div className="bg-gray-50 dark:bg-gray-900/50 rounded-[2rem] p-12 text-center border border-dashed border-gray-200 dark:border-gray-800">
+          <Laptop className="h-10 w-10 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-400 font-bold uppercase text-[10px] tracking-widest">Nenhum equipamento vinculado a este profissional.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {equipamentos.map(e => (
+            <div key={e.id} className="p-6 bg-white dark:bg-gray-800 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-3 bg-indigo-50 dark:bg-indigo-900/30 rounded-xl text-indigo-600">
+                  <Laptop className="h-6 w-6" />
+                </div>
+                <div>
+                  <h4 className="font-black text-gray-900 dark:text-white tracking-tight">{e.nome}</h4>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{e.fabricante}</p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Processador</p>
+                    <p className="text-[10px] font-bold text-gray-700 dark:text-gray-300 truncate">{e.processador || '-'}</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                    <p className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Memória</p>
+                    <p className="text-[10px] font-bold text-gray-700 dark:text-gray-300 truncate">{e.memoria || '-'}</p>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 dark:bg-gray-900/50 rounded-xl">
+                  <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Características</p>
+                  <p className="text-xs text-gray-600 dark:text-gray-400 font-medium whitespace-pre-wrap">{e.caracteristicas || 'Nenhuma característica informada.'}</p>
+                </div>
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-3 w-3 text-gray-400" />
+                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Entrega: {e.data_entrega ? formatDateBR(e.data_entrega) : '-'}</span>
+                  </div>
+                  <span className={`px-2 py-0.5 text-[8px] font-black rounded uppercase border ${
+                    e.status === 'Em uso' ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-amber-50 text-amber-600 border-amber-100'
+                  }`}>
+                    {e.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );

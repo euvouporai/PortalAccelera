@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Home, Users, Building, Briefcase, Calendar, BarChart3, Sparkles, LogOut, X, List, Sun, Moon, ChevronRight, User, Settings, ChevronDown, ReceiptText, Key, Shield, UserCircle, Target } from 'lucide-react';
+import { Home, Users, Building, Briefcase, Calendar, BarChart3, Sparkles, LogOut, X, List, Sun, Moon, ChevronRight, User, Settings, ChevronDown, ReceiptText, Key, Shield, UserCircle, Target, Laptop } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { useToast, Logo } from './UI';
 
@@ -179,6 +179,7 @@ export function Sidebar() {
     { name: 'Faturamento', view: 'faturamentos', icon: ReceiptText },
     { name: 'Oportunidades', view: 'oportunidades', icon: Target },
     { name: 'Relatórios', view: 'relatorios', icon: BarChart3 },
+    { name: 'Equipamentos', view: 'equipamentos', icon: Laptop },
     { name: 'Configurações', view: 'settings', icon: Settings },
   ];
 
